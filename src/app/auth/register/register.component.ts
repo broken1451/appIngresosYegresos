@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -11,7 +12,11 @@ import { AuthService } from '../../services/auth.service';
 export class RegisterComponent implements OnInit {
   public formulario: FormGroup;
 
-  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.formulario = this.fb.group({
@@ -21,20 +26,39 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  createUser() {
+    console.log(this.formulario);
+    if (this.formulario.invalid) {
+      return;
+    }
 
-  createUser(){
-   console.log(this.formulario);
-   if (this.formulario.invalid) {
-     return;
-   }
-   const { nombre, email, password} =  this.formulario.value
-   this.authService.crearUser(nombre, email, password).then((credenciales) =>{
-    console.log({credenciales});
-    this.router.navigate(['/'])
-  }).catch(e=>{console.error(e);})
+    // loading
+    Swal.fire({
+      title: 'Espere por favor!',
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    const { nombre, email, password } = this.formulario.value;
+    this.authService
+      .crearUser(nombre, email, password)
+      .then((credenciales) => {
+        console.log({ credenciales });
+        Swal.close();
+        this.router.navigate(['/']);
+      })
+      .catch((e) => {
+        console.error(e);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: e.message,
+        });
+      });
   }
 
-  get registerForm(){
+  get registerForm() {
     return this.formulario.controls;
   }
 }
