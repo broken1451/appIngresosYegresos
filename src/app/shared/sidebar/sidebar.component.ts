@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { AuthService } from '../../services/auth.service';
 import { AppState } from '../../app.reducer';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,18 +13,31 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-
-  public loading: boolean
+  public loading: boolean;
   public subcription: Subscription;
-  
-  constructor(private authService: AuthService, private router: Router) {}
+  public nombre: string = '';
+
+  constructor(
+    private store: Store<AppState>,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    
+    this.subcription = this.store
+      .select('user')
+      .pipe(
+        filter((user) => {
+          return user.user != null;
+        })
+      )
+      .subscribe((user) => {
+        this.nombre = user.user.nombre;
+      });
   }
 
-  ngOnDestroy(){
-  
+  ngOnDestroy() {
+    this.subcription.unsubscribe();
   }
 
   logout() {
