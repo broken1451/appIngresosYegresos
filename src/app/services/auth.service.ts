@@ -6,15 +6,16 @@ import { map } from 'rxjs/operators';
 
 import { Store } from '@ngrx/store';
 import { AppState } from '../app.reducer';
-import { setUser } from '../auth/auth.actions';
 import * as authAction from '../auth/auth.actions';
 import { Subscription } from 'rxjs';
+import * as ingresoEgresoActions from '../ingreso-egreso/ingresoEgreso.actions';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   public subcription: Subscription;
+  private _user: User;
 
   constructor(
     private store: Store<AppState>,
@@ -25,20 +26,25 @@ export class AuthService {
   // @function metodo para obtener la informacion del usuario de firebase
   initAuthListener() {
     this.auth.authState.subscribe((fuser) => {
-      console.log(fuser);
+      // console.log(fuser);
       // console.log(fuser?.uid);
       // console.log(fuser?.email);
       if (fuser) {
-        this.subcription = this.firestore.doc(`${fuser.uid}/usuario`).valueChanges()
+        this.subcription = this.firestore
+          .doc(`${fuser.uid}/usuario`)
+          .valueChanges()
           .subscribe((firestoreUser: any) => {
-            console.log({ firestoreUser });
+            // console.log({ firestoreUser });
             const user = User.fromFireStore(firestoreUser);
+            this._user = user;
             this.store.dispatch(authAction.setUser({ user: user }));
           });
       } else {
         // no existe
         this.subcription.unsubscribe();
         this.store.dispatch(authAction.unSetUser());
+        this.store.dispatch(ingresoEgresoActions.unSetItem());
+        this._user = null;
       }
     });
   }
@@ -73,5 +79,9 @@ export class AuthService {
         }
       })
     );
+  }
+
+  get user() {
+    return this._user;
   }
 }
