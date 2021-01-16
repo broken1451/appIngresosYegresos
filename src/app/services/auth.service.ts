@@ -41,7 +41,7 @@ export class AuthService {
           });
       } else {
         // no existe
-        this.subcription.unsubscribe();
+        this.subcription?.unsubscribe();
         this.store.dispatch(authAction.unSetUser());
         this.store.dispatch(ingresoEgresoActions.unSetItem());
         this._user = null;
